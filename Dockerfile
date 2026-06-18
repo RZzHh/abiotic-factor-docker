@@ -3,8 +3,7 @@ FROM ubuntu:24.04
 # 非交互模式 / Non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安装 WineHQ 官方源与稳定版、SteamCMD，以及无界面运行所需的 Xvfb
-# Install WineHQ repo + stable, SteamCMD, and Xvfb required for headless running
+# 安装 WineHQ 官方源与稳定版、SteamCMD（无界面）/ Install WineHQ repo + stable and headless SteamCMD
 RUN dpkg --add-architecture i386 && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -26,14 +25,7 @@ RUN dpkg --add-architecture i386 && \
     apt-get update && \
     # WineHQ 建议用 --install-recommends 安装 winehq-stable
     # 如需可复现构建，可锁定版本，例如：winehq-stable=11.0.0.0~noble-1
-    # For reproducible builds you can pin a version, e.g. winehq-stable=11.0.0.0~noble-1
     apt-get install -y --install-recommends winehq-stable && \
-    \
-    # 无界面运行 UE 服务端通常需要 Xvfb（entrypoint 一般用 xvfb-run 启动）
-    # Headless UE server usually needs Xvfb (entrypoint typically launches via xvfb-run)
-    # 如确认 entrypoint 未用 xvfb-run，可删掉这一步；
-    # 如需 NTLM 或 winetricks，再加 winbind / cabextract
-    apt-get install -y --no-install-recommends xvfb && \
     \
     # 预先接受 steam 许可，避免构建时卡住 / Pre-accept the Steam license to prevent build hangs
     echo steam steam/question select "I AGREE" | debconf-set-selections && \
@@ -46,7 +38,7 @@ RUN dpkg --add-architecture i386 && \
 # SteamCMD 安装在 /usr/games / SteamCMD is installed under /usr/games
 ENV PATH="/usr/games:${PATH}"
 
-# 纯 64 位 Wine，禁用多余 debug，避免 gecko/mono 弹窗 / 64-bit Wine with minimal debug to avoid gecko/mono pop-ups
+# 纯 64 位 Wine，禁用多余 debug，屏蔽 gecko/mono 弹窗 / 64-bit Wine, minimal debug, no gecko/mono pop-ups
 ENV WINEDEBUG=-all \
     WINEARCH=win64 \
     WINEPREFIX=/server/.wine \
